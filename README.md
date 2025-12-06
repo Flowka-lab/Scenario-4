@@ -1,85 +1,60 @@
- OCR Mail Notification System
+# OCR Mail Notification System
 
-Automated AI-powered workflow to scan postal letters, extract the recipient name, match it against a contacts list, and send instant notifications by email (and optionally WhatsApp).
+Automated AI-powered workflow to scan postal letters, extract the recipient name, match it with a contacts list, and send notifications by email (and optionally WhatsApp).
 
- Overview
+## Overview
 
-This project automates postal mail handling using:
+This project automates the handling of postal mail using:
 
-Google Drive → Upload scanned letters
+- Google Drive for uploading scanned letters
+- Google Cloud Vision OCR for raw text extraction
+- OpenAI for identifying and normalizing the recipient name
+- Google Sheets for logging and contact directory
+- Gmail for sending notification emails with attachments
+- Optional WhatsApp API for additional notifications
+- n8n for workflow orchestration
 
-Google Cloud Vision OCR → Extract raw text
+The system is built as a simple and maintainable MVP, with the ability to scale into a full mailroom automation platform.
 
-OpenAI → Identify and normalize the recipient name
+## Key Features
 
-Google Sheets → Log entries + contact directory
+### OCR and AI Extraction
+- Extracts text from scanned JPEG, PNG, or PDF documents.
+- Uses AI to return a clean, normalized recipient name only.
+- Handles uncertainty by returning `null` if no reliable name is detected.
 
-Gmail → Notify the recipient with the scanned image
+### Contact Matching
+- Matches the extracted name against a `Normalized` column in Google Sheets.
+- Case-insensitive and accent-insensitive matching.
+- Supports a basic CRM-like contact directory.
 
-WhatsApp API (optional) → Additional notifications
+### Notifications
 
-n8n → Orchestration of the complete workflow
+**When a match is found:**
+- Sends an email including:
+  - The identified recipient name
+  - A notification message
+  - The scanned image attached
+- Optional WhatsApp notification
 
-Designed as a simple and maintainable MVP, the system can scale into a full mailroom automation platform.
+**When no match is found:**
+- Sheet is updated with `NOT_FOUND` status
+- No notification is sent
 
- Key Features
- OCR & AI Extraction
+### Logging
 
-Extracts text from scanned letters (JPEG, PNG, PDF).
+Each letter entry is logged with:
+- Unique ID
+- File name
+- OCR text
+- Extracted recipient
+- Matching result
+- Status transitions
+- Timestamps
 
-Uses AI to return a clean recipient name only (titles removed, normalized).
+## Architecture Summary
 
-Handles uncertain extraction gracefully (returns null if unsure).
-
-📇 Contact Matching
-
-Matches the extracted name with a Normalized column in Google Sheets.
-
-Case-insensitive and accent-insensitive matching.
-
-Supports a simple CRM-style contact directory.
-
-📬 Notifications
-
-If a match is found:
-
-Sends an email containing:
-
-The recipient name
-
-Notification message
-
-The scanned image attached
-
-Optional WhatsApp notification
-
-If no match:
-
-Sheet is updated to NOT_FOUND
-
-No notification is sent
-
-🗂 Logging
-
-Each letter entry includes:
-
-Unique ID
-
-File name
-
-OCR text
-
-Extracted recipient
-
-Match result
-
-Status transitions
-
-Timestamps
-
-Ensures full traceability and auditability.
-
-🧩 Architecture Summary
+```
 [Google Drive Folder Trigger]
             ↓
      [Download Image]
@@ -98,8 +73,11 @@ Ensures full traceability and auditability.
             │ NO
             ↓
    [Update Status: NOT_FOUND]
+```
 
-📁 Repository Structure
+## Repository Structure
+
+```
 /README.md
 /GET_STARTED.md
 /PROJECT_OVERVIEW.md
@@ -109,45 +87,43 @@ Ensures full traceability and auditability.
 /CONTRIBUTING_GUIDE.md
 /CHANGELOG.md
 /FUTURE_ENHANCEMENTS.md
-/OCR-UC1-V01.json        → n8n workflow file
+/OCR-UC1-V01.json        → n8n workflow
 /assets/                 → sample letter images
+```
 
-📹 Video Tutorial (Placeholder)
+## Video Tutorial
 
-A full walkthrough of the system is available here:
-👉 https://youtube.com/placeholder-tutorial
+A full walkthrough of the workflow is available at:
+https://youtube.com/placeholder-tutorial
 
-🛠 System Requirements
+## System Requirements
 
-Google Cloud Project
+- Google Cloud Project
+- Google Vision API enabled
+- n8n (self-hosted or cloud)
+- Gmail Workspace or Gmail API credentials
+- Google Sheets API access
+- OpenAI API key (GPT-4.1-mini or similar)
+- Internet connection
 
-Vision API enabled
+Recommended usage: 1–10 letters per day for the MVP; scalable in future releases.
 
-n8n (Cloud or self-hosted)
+## Accounts to Create
 
-Gmail Workspace or Gmail API credentials
+| Service | Purpose |
+|---------|---------|
+| Google Drive | Store scanned letters |
+| Google Cloud Vision | OCR text extraction |
+| Google Sheets | Logging + contacts directory |
+| Gmail API | Email notifications |
+| OpenAI | Recipient extraction |
+| n8n Cloud or self-hosted | Workflow automation |
 
-Google Sheets API access
+## License
 
-OpenAI API key (GPT-4.1-mini or equivalent)
+This project is distributed under the MIT License.
 
-Internet access
+## Contributions
 
-Recommended load: 1–10 letters/day (MVP), scalable in later versions.
-
-🔐 Accounts to Create
-Service	Purpose
-Google Drive	Store scanned letters
-Google Cloud Vision	OCR text extraction
-Google Sheets	Logs + contacts directory
-Gmail API	Email notifications
-OpenAI	Recipient name extraction
-n8n Cloud / self-hosted	Workflow automation
-📜 License
-
-Released under the MIT License.
-
-🙌 Contributions
-
-Contributions are welcome!
-See CONTRIBUTING_GUIDE.md for guidelines.
+Contributions are welcome.
+See `CONTRIBUTING_GUIDE.md` for more details.
