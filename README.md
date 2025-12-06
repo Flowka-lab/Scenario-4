@@ -67,9 +67,9 @@ Each letter entry is logged with:
             ↓
 [Google Sheets – Contacts Lookup]
             ↓
- ┌───────────────┐        ┌──────────────────────┐
- │ Recipient Found│ YES →  │ Send Email (Gmail)   │
- └───────────────┘        └──────────────────────┘
+   ┌─────────────────┐         ┌──────────────────────┐
+   │ Recipient Found │  YES →  │   Send Email (Gmail) │
+   └─────────────────┘         └──────────────────────┘
             │ NO
             ↓
    [Update Status: NOT_FOUND]
