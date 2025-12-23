@@ -104,25 +104,25 @@ Maintains credentials, contact list, and workflow configuration.
 ## 7. High-Level Workflow Summary
 
 ```
-Physical Letter
-      ↓
-Scan & Upload to Letters_Inbox
-      ↓
-OCR Text Extraction
-      ↓
-AI Recipient Identification
-      ↓
-Contact Verification
-      ↓
- ┌─────────────────────────┐
- │    Recipient Found ?    │
- └──────────────┬──────────┘
+          Physical Letter
+                ↓
+          Scan & Upload to Letters_Inbox
+                ↓
+          OCR Text Extraction
+                ↓
+          AI Recipient Identification
+                ↓
+         Contact Verification
+                ↓
+   ┌─────────────────────────┐
+   │    Recipient Found ?    │
+   └────────────┬────────────┘
                 │ 
                 ▼
                 │                   
                 │ ———— ► ———— YES ———   Send Email Notification
                 │                       Move File → Letters_Processed
-                │
+                ▼
                 │
                 | ———— ► ————  NO ———  Update Status
                                        Move File → Letters_Unprocessed    
