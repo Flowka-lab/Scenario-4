@@ -30,6 +30,8 @@ The system is built as a simple and maintainable MVP, with the ability to scale 
 
 ### Notifications
 
+- Processed letters are automatically moved into Letters_Processed or Letters_Unprocessed folders in Google Drive to ensure a clean file lifecycle
+
 **When a match is found:**
 - Sends an email including:
   - The identified recipient name
@@ -53,6 +55,7 @@ Each letter entry is logged with:
 - Timestamps
 
 ## Architecture Summary
+
 
 ```
 [Google Drive Folder Trigger]
