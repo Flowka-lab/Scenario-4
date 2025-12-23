@@ -112,7 +112,7 @@ Maintains credentials, contact list, and workflow configuration.
                 ↓
           AI Recipient Identification
                 ↓
-         Contact Verification
+          Contact Verification
                 ↓
    ┌─────────────────────────┐
    │    Recipient Found ?    │
