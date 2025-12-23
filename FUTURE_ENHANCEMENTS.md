@@ -1,6 +1,6 @@
 # FUTURE_ENHANCEMENTS.md
 
-# 🚀 Roadmap
+#  Roadmap
 
 ## Short Term
 - Batch processing
