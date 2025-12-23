@@ -1,6 +1,6 @@
 # PROJECT_OVERVIEW.md
 
-# 📬 Project Overview – OCR Mail Notification System (Scenario 4)
+#  Project Overview – OCR Mail Notification System (Scenario 4)
 
 ## 1. Purpose
 
@@ -115,18 +115,19 @@ AI Recipient Identification
 Contact Verification
       ↓
  ┌─────────────────────────┐
- │ Recipient Found ?        │
+ │    Recipient Found ?    │
  └──────────────┬──────────┘
-                │ YES
+                │ 
                 ▼
-      Send Email Notification
+                │                   
+                │ ———— ► ———— YES ———   Send Email Notification
+                │                       Move File → Letters_Processed
                 │
-      Move File → Letters_Processed
+                │
+                | ———— ► ————  NO ———  Update Status
+                                       Move File → Letters_Unprocessed    
 
-                │ NO
-                ▼
-      Update Status
-      Move File → Letters_Unprocessed
+  
 ```
 
 ---
