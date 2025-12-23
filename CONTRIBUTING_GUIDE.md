@@ -1,6 +1,6 @@
 # CONTRIBUTING_GUIDE.md
 
-# 🤝 Contributing
+#  Contributing
 
 ## How to Contribute
 - Improve docs
