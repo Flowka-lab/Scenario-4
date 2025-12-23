@@ -1,6 +1,6 @@
 # SETUP_GUIDE.md
 
-# ⚙️ Setup Guide – Scenario 4
+#  Setup Guide – Scenario 4
 
 ## 1. Prerequisites
 - Google Cloud Project
