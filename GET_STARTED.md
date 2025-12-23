@@ -1,6 +1,6 @@
 # GET_STARTED.md
 
-# 🚀 Get Started – OCR Mail Notification System (Scenario 4)
+#  Get Started – OCR Mail Notification System 
 
 This guide explains how to run the **latest version** of the OCR Mail Notification System using the updated n8n workflow.
 
