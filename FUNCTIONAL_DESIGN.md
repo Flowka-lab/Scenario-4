@@ -53,19 +53,21 @@ This document describes **what the system does**, from a business and user persp
 ## 4. Workflow Logic (Functional)
 
 ```
-Upload Letter
-   ↓
-OCR Extraction
-   ↓
-AI Name Parsing
-   ↓
-Contact Verification
-   ↓
-Found? ── YES → Notify + Archive
-   │
-   NO
-   ↓
-Mark Not Found + Archive
+────── Upload Letter
+         ↓
+─────  OCR Extraction
+         ↓
+────── AI Name Parsing
+         ↓
+────── Contact Verification
+         ↓
+────── Found?
+         │
+         │──── YES → Notify + Archive
+         │
+         │──── NO  → Mark Not Found + Archive
+   
+
 ```
 
 ---
