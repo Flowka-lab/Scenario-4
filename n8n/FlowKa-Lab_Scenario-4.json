@@ -1,0 +1,1230 @@
+{
+  "name": "FlowKa-Lab\\Scenario-4",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "// We assume the previous node is \"Google Drive - Download\"\n// and that its binary property is called \"letter_image\"\n// (set in the Google Drive Download node).\n\nconst items = [];\n\nfor (let i = 0; i < $input.all().length; i++) {\n  // Get the binary data buffer from n8n's filesystem storage\n  const buffer = await this.helpers.getBinaryDataBuffer(i, 'letter_image');\n\n  // Convert buffer to base64 string\n  const base64Image = buffer.toString('base64');\n\n  // Build the Vision API request body for this item\n  items.push({\n    json: {\n      requests: [\n        {\n          image: {\n            content: base64Image\n          },\n          features: [\n            { type: 'DOCUMENT_TEXT_DETECTION' } // or TEXT_DETECTION\n          ]\n        }\n      ]\n    }\n  });\n}\n\nreturn items;\n"
+      },
+      "id": "a69fb666-e8b4-4b5d-b806-1c94ec56afba",
+      "name": "Prepare Vision Request",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        864,
+        80
+      ],
+      "notesInFlow": true,
+      "notes": "Step 3 – Prepare Google Vision OCR request payload (base64 content from binary)."
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://vision.googleapis.com/v1/images:annotate?key=AIzaSyCQGlH2rzIpNFMn-laGC0CX84ekIkrt1-w",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ JSON.stringify($json) }}\n",
+        "headerParametersJson": "={\n  \"Content-Type\": \"application/json\"\n}\n\n",
+        "queryParametersJson": "="
+      },
+      "id": "ade5ec71-7039-4148-8ca9-97efdea76e61",
+      "name": "Google Vision OCR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        80
+      ],
+      "notesInFlow": true,
+      "notes": "Step 4 – Call Google Cloud Vision API to extract text."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [],
+          "boolean": [],
+          "collection": [],
+          "string": [
+            {
+              "value1": "={{ $json.contact_normalized }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "65a58d1c-52c6-4c81-ad6a-804ca9966775",
+      "name": "IF Recipient Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        336
+      ],
+      "notesInFlow": true,
+      "notes": "Step 9 – Branch: recipient found vs not found."
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "You Have Received a New Postal Mail",
+        "includeHtml": true,
+        "htmlMessage": "=Hello {{ $json.contact_full_name }},<br><br>  This is a quick notification to let you know that a new postal mail has been received for you.<br><br>   Attached: A scanned image of the envelope.<br><br>  If you would like us to scan and send you the full content of the letter, simply reply to this email and we will take care of it.<br><br>  Best regards,<br> Mail Reception Service",
+        "message": "=",
+        "toList": [
+          "={{ $json.contact_email }}"
+        ],
+        "additionalFields": {}
+      },
+      "id": "5c8ff53a-640b-4556-b7f8-df8f810fb90b",
+      "name": "Send Email (Gmail)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        192
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZrOdqdi1tVvmp861",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "Step 11 – If recipient found: send email with short summary."
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1fbnMimrSXhQROvmzmk2dVjVpyHvnxTz7",
+          "mode": "list",
+          "cachedResultName": "Letters_Inbox",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1fbnMimrSXhQROvmzmk2dVjVpyHvnxTz7"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        528,
+        80
+      ],
+      "id": "69f122e8-de6b-4837-8aad-49dc9001342e",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SZgjbkH0AaAhRSnF",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "letter_image"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        704,
+        80
+      ],
+      "id": "2486a8ba-65db-4b39-bf38-83221c09577a",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SZgjbkH0AaAhRSnF",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "68240edf-72f4-4b79-ad7b-52db8b3f4374",
+              "name": "Unique_id",
+              "value": "={{   \"LTR_\" +   $now.toISO().slice(0,10).replace(/-/g,\"\") + \"_\" +  Math.random().toString(36).substring(2,9)}}",
+              "type": "string"
+            },
+            {
+              "id": "7c2e0ef7-983d-4220-8775-7c279e5326a3",
+              "name": "gdrive_file_id",
+              "value": "={{ $node[\"Download file\"].json[\"id\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "ead10b25-4e20-4662-8c2d-e26f0d2c913f",
+              "name": "gdrive_file_name",
+              "value": "={{ $node[\"Download file\"].json[\"name\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "a0fa37a6-d005-457c-b69b-ae3b419fe87b",
+              "name": "ocr_text",
+              "value": "={{ $json[\"responses\"][0][\"fullTextAnnotation\"][\"text\"] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "e997b20a-e831-4725-a3cf-621be273b4c9",
+              "name": "status",
+              "value": "NEW",
+              "type": "string"
+            },
+            {
+              "id": "5212b8e5-8525-49f9-b3cc-e76dfb8d4a68",
+              "name": "Created_at",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        80
+      ],
+      "id": "309a9613-7459-4caa-a3de-9383a24a3a4a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE",
+          "mode": "list",
+          "cachedResultName": "OCR_Workflow",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "letters_inbox",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "gdrive_file_id": "={{ $json.gdrive_file_id }}",
+            "gdrive_file_name": "={{ $json.gdrive_file_name }}",
+            "ocr_text": "={{ $json.ocr_text }}",
+            "status": "={{ $json.status }}",
+            "created_at": "={{ $json.Created_at }}",
+            "Unique_id": "={{ $json.Unique_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "Unique_id",
+              "displayName": "Unique_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "gdrive_file_id",
+              "displayName": "gdrive_file_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gdrive_file_name",
+              "displayName": "gdrive_file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ocr_text",
+              "displayName": "ocr_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "extracted_recipient",
+              "displayName": "extracted_recipient",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "matched_contact_id",
+              "displayName": "matched_contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1376,
+        80
+      ],
+      "id": "ca36fc46-14f4-44e3-a1ce-634441da2cd0",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "H5oYDYGiz3u7Io0x",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.ocr_text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "instructions": "You are an assistant that extracts the postal letter recipient from OCR text.\nThe input is raw text from a scanned letter envelope or header. \nRemove any titles or honorifics. Examples:\n   - Mr, Mme, Mrs, Mlle, Miss, Ms, M., Mme., Dr, Prof, Pr, Señor, etc.\n   The output must contain ONLY the clean full name (e.g., \"FATIMA-ZAHRA BENNANI\").\nYou must return a short JSON object with these keys:\nrecipient_name (string), reference_id (string or null).\nIf you are not sure, set the value to null.\nRespond with JSON only, no explanations.\nReturn ONLY valid JSON. No markdown. No code fences"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        544,
+        304
+      ],
+      "id": "a7b17687-ac70-4bfb-a729-f0addefd17c6",
+      "name": "Prepare Letter Row",
+      "credentials": {
+        "openAiApi": {
+          "id": "PQNTq8SXT4r9WIlX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1088,
+        288
+      ],
+      "id": "96908d9d-4965-4a91-836f-f49cbb068eb7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE",
+          "mode": "list",
+          "cachedResultName": "OCR_Workflow",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "letters_inbox",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "updated_at": "={{ $json.updated_at }}",
+            "extracted_recipient": "={{ $json.extracted_recipient }}",
+            "row_number": 0,
+            "Unique_id": "={{ $json.Unique_id }}"
+          },
+          "matchingColumns": [
+            "Unique_id"
+          ],
+          "schema": [
+            {
+              "id": "Unique_id",
+              "displayName": "Unique_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "gdrive_file_id",
+              "displayName": "gdrive_file_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "gdrive_file_name",
+              "displayName": "gdrive_file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ocr_text",
+              "displayName": "ocr_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "extracted_recipient",
+              "displayName": "extracted_recipient",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "matched_contact_id",
+              "displayName": "matched_contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        512
+      ],
+      "id": "299e1b69-971b-4490-8319-2233b8efdce7",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "H5oYDYGiz3u7Io0x",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        304
+      ],
+      "id": "bc1c305f-2640-414c-9de2-8725c24ae438",
+      "name": "Send message",
+      "webhookId": "a53465ae-0601-4748-8eb4-c9db8198593b",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE",
+          "mode": "list",
+          "cachedResultName": "OCR_Workflow",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "letters_inbox",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Updated",
+            "Unique_id": "={{ $json.Unique_id }}",
+            "updated_at": "={{ $json.updated_at }}"
+          },
+          "matchingColumns": [
+            "Unique_id"
+          ],
+          "schema": [
+            {
+              "id": "Unique_id",
+              "displayName": "Unique_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "gdrive_file_id",
+              "displayName": "gdrive_file_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gdrive_file_name",
+              "displayName": "gdrive_file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ocr_text",
+              "displayName": "ocr_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "extracted_recipient",
+              "displayName": "extracted_recipient",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "matched_contact_id",
+              "displayName": "matched_contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1920,
+        80
+      ],
+      "id": "e2c843c7-6830-410b-b2ba-0ede31fc8f88",
+      "name": "Update Sent Status",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "H5oYDYGiz3u7Io0x",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE",
+          "mode": "list",
+          "cachedResultName": "OCR_Workflow",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "letters_inbox",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Unique_id": "={{ $json.Unique_id }}",
+            "status": "Not Found",
+            "updated_at": "={{ $json.updated_at }}"
+          },
+          "matchingColumns": [
+            "Unique_id"
+          ],
+          "schema": [
+            {
+              "id": "Unique_id",
+              "displayName": "Unique_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "gdrive_file_id",
+              "displayName": "gdrive_file_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gdrive_file_name",
+              "displayName": "gdrive_file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ocr_text",
+              "displayName": "ocr_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "extracted_recipient",
+              "displayName": "extracted_recipient",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "matched_contact_id",
+              "displayName": "matched_contact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1968,
+        496
+      ],
+      "id": "e2764479-c62c-4768-9aa9-f4f9ea780150",
+      "name": "Update Not found Status",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "H5oYDYGiz3u7Io0x",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "![Image](https://i.ibb.co/Swxd76DC/Gemini-Generated-Image-o0gh25o0gh25o0gh.png)\n",
+        "height": 672,
+        "width": 448,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "36273a1c-343c-4c27-b739-460af5bd8b46",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "functionCode": "// This node comes right after the OpenAI \"Extract Recipient\" node.\n\n// Get all incoming items (usually just 1)\nconst items = $input.all();\n\nreturn items.map(item => {\n  // 1) Get the raw JSON string returned by OpenAI\n  const outputArr = item.json.output || [];\n  const firstMsg = outputArr[0] || {};\n  const contentArr = firstMsg.content || [];\n  const firstContent = contentArr[0] || {};\n  const raw = firstContent.text || '';\n\n  // 2) Parse that JSON string safely\n  let parsed;\n  try {\n    parsed = JSON.parse(raw);\n  } catch (e) {\n    parsed = { recipient_name: null, reference_id: null };\n  }\n\n  // 3) Build the final object that we will send to Google Sheets\n  return {\n    json: {\n      gdrive_file_id: $node[\"Prepare Letter Row\"].json[\"gdrive_file_id\"],\n      gdrive_file_name: $node[\"Prepare Letter Row\"].json[\"gdrive_file_name\"],\n      ocr_text: $node[\"Prepare Letter Row\"].json[\"ocr_text\"],\n      status: $node[\"Prepare Letter Row\"].json[\"status\"],\n      extracted_recipient: parsed.recipient_name || null,\n      extracted_reference_id: parsed.reference_id || null,\n      updated_at: new Date().toISOString()\n    }\n  };\n});\n"
+      },
+      "id": "442cc078-fbac-4e22-a82e-304c43fb9c81",
+      "name": "Parse Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        848,
+        304
+      ],
+      "notesInFlow": true,
+      "notes": "Step 7 – Convert OpenAI text output to JSON fields."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE",
+          "mode": "list",
+          "cachedResultName": "OCR_Workflow",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 119529908,
+          "mode": "list",
+          "cachedResultName": "contacts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IrP_E9IdqGia5OCECnpREHt90zoA-F8fsf1OH3LsLZE/edit#gid=119529908"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Normalized",
+              "lookupValue": "={{ $json.extracted_recipient }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        912,
+        640
+      ],
+      "id": "4ed6ef36-2a65-4696-8fa0-c39c74e8b808",
+      "name": "Verify within contact list",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "H5oYDYGiz3u7Io0x",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1312,
+        496
+      ],
+      "id": "bb4ed823-d767-4756-9b6f-20b78dccf925",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge 3 incoming items into 1 unified JSON object.\n// Expected incoming items:\n// 1) Letter payload (has gdrive_file_id / ocr_text / status ...)\n// 2) Sheet log/update payload (has Unique_id + row_number + extracted_recipient ...)\n// 3) Contact match payload (has Email / whatsapp / Normalized ...)\n\nconst items = $input.all().map(i => i.json);\n\n// Helper to find the item that matches a condition\nconst pick = (fn) => items.find(fn) || {};\n\n// Identify each source item by unique fields\nconst letter = pick(o => o.gdrive_file_id && o.ocr_text);\nconst log = pick(o => typeof o.row_number !== \"undefined\" && o.Unique_id && !o.Email);\nconst contact = pick(o => o.Email || o.whatsapp || o.Normalized);\n\n// Build unified output (contact fields are optional)\nconst merged = {\n  // Letter info\n  gdrive_file_id: letter.gdrive_file_id ?? null,\n  gdrive_file_name: letter.gdrive_file_name ?? null,\n  ocr_text: letter.ocr_text ?? null,\n  status: letter.status ?? null,\n\n  // AI extraction\n  extracted_recipient: (log.extracted_recipient ?? letter.extracted_recipient) ?? null,\n  extracted_reference_id: letter.extracted_reference_id ?? null,\n\n  // IDs + timestamps\n  Unique_id: (log.Unique_id ?? letter.Unique_id) ?? null,\n  created_at: letter.created_at ?? null,\n  updated_at: log.updated_at ?? letter.updated_at ?? new Date().toISOString(),\n\n  // Logging info\n  letter_row_number: log.row_number ?? null,\n\n  // Contact match (if found)\n  contact_found: Boolean(contact && (contact.Email || contact.whatsapp)),\n  contact_id: contact.id ?? null,\n  contact_reference_id: contact.reference_id ?? null,\n  contact_full_name: contact[\"Full Name\"] ?? null,\n  contact_normalized: contact.Normalized ?? null,\n  contact_email: contact.Email ?? null,\n  contact_whatsapp: contact.whatsapp ?? null,\n  contact_is_active: contact.is_active ?? null\n};\n\nreturn [{ json: merged }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        448
+      ],
+      "id": "4564c162-8819-488b-8719-32d439ae88be",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.gdrive_file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1FDwrFDM_Qb8CVya40s9xv2D3jKklSA2_",
+          "mode": "list",
+          "cachedResultName": "Letters_Unprocessed",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1FDwrFDM_Qb8CVya40s9xv2D3jKklSA2_"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2016,
+        704
+      ],
+      "id": "eaf05edb-0b3d-4dc1-b22d-e722cd9d4a5b",
+      "name": "Unprocessed Letters",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SZgjbkH0AaAhRSnF",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.gdrive_file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1iN_FGj8na1FMIMgpEQi__tLXBT3szmJT",
+          "mode": "list",
+          "cachedResultName": "Letters_Processed",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1iN_FGj8na1FMIMgpEQi__tLXBT3szmJT"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2352,
+        480
+      ],
+      "id": "ff2514a6-7665-421a-99fe-b9c90b32f3b4",
+      "name": "Processed Letters",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "SZgjbkH0AaAhRSnF",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Prepare Vision Request": {
+      "main": [
+        [
+          {
+            "node": "Google Vision OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vision OCR": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Recipient Found": {
+      "main": [
+        [
+          {
+            "node": "Send Email (Gmail)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Sent Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Processed Letters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Not found Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Unprocessed Letters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Prepare Vision Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Prepare Letter Row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Letter Row": {
+      "main": [
+        [
+          {
+            "node": "Parse Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Verify within contact list",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Parse Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Verify within contact list": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "IF Recipient Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processed Letters": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d2ae665e-74db-4bb0-aae8-e7ed947a4bc2",
+  "meta": {
+    "instanceId": "673bdd3c5d236441c0cb3d2f73f44a84edbc071b51a88faf9a8b3b50c9387bd9"
+  },
+  "id": "tRSeHWwDI9CrJp3p",
+  "tags": []
+}
