@@ -1,6 +1,6 @@
 # FUNCTIONAL_DESIGN.md
 
-# 📘 Functional Design – OCR Mail Notification System (Scenario 4)
+#  Functional Design – OCR Mail Notification System 
 
 ## 1. Purpose
 This document describes **what the system does**, from a business and user perspective, aligned with the updated Scenario 4 n8n workflow.
