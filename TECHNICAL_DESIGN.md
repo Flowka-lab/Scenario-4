@@ -1,6 +1,6 @@
 # TECHNICAL_DESIGN.md
 
-# 🧩 Technical Design – OCR Mail Notification System (Scenario 4)
+#  Technical Design – OCR Mail Notification System
 
 ## 1. Architecture Overview
 
