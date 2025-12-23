@@ -1,6 +1,6 @@
 # PROJECT_OVERVIEW.md
 
-#  Project Overview – OCR Mail Notification System (Scenario 4)
+#  Project Overview – OCR Mail Notification System
 
 ## 1. Purpose
 
