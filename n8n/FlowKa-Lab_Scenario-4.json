@@ -19,7 +19,7 @@
     {
       "parameters": {
         "requestMethod": "POST",
-        "url": "https://vision.googleapis.com/v1/images:annotate?key=AIzaSyCQGlH2rzIpNFMn-laGC0CX84ekIkrt1-w",
+        "url": "https://vision.googleapis.com/v1/images:annotate?key=AIzaSxxxxxxxxxxxxxxxxxxxxxxxx",
         "jsonParameters": true,
         "options": {},
         "bodyParametersJson": "={{ JSON.stringify($json) }}\n",
